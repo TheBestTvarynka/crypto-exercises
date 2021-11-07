@@ -8,15 +8,11 @@ fn decrypt_string(data: String) -> String {
 
     let mut result = vec!['0'; data.len()];
 
-    let mut i = 3;
-    let len = data.len() - 1;
-    while i < len {
+    for i in (3..data.len() - 1).step_by(4) {
         result[i] = data[i];
         result[i - 1] = data[i + 1];
         result[i - 2] = data[i - 1];
         result[i - 3] = data[i + 2];
-
-        i += 4;
     }
 
     result.into_iter().collect::<String>().replace('!', " ")
