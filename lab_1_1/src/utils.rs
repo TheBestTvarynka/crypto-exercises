@@ -51,13 +51,25 @@ pub fn decode_base64() {
         .unwrap();
 }
 
+pub fn hex_str_to_bytes(data: &str) -> Vec<u8> {
+    (0..data.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&data[i..i + 2], 16).unwrap())
+        .collect()
+}
+
 #[cfg(test)]
 mod test {
-    use crate::utils::chars_to_byte;
+    use crate::utils::{chars_to_byte, hex_str_to_bytes};
 
     #[test]
     fn test_chars_to_byte() {
         let byte = chars_to_byte(&['0', '0', '1', '1', '0', '0', '1', '0']);
         assert_eq!(50, byte);
+    }
+
+    #[test]
+    fn test_hex_str_to_bytes() {
+        assert_eq!(vec![9, 10, 11, 12], hex_str_to_bytes("090A0B0C"));
     }
 }
