@@ -36,19 +36,14 @@ pub fn file_content_as_bytes() {
         .unwrap();
 }
 
-pub fn decode_base64() {
+pub fn decode_base64(filepath: &str) -> Vec<u8> {
     let mut data = String::new();
-    std::fs::File::open("input_as_bytes.txt")
+    std::fs::File::open(filepath)
         .unwrap()
         .read_to_string(&mut data)
         .unwrap();
 
-    let bytes = base64::decode(&mut data).unwrap();
-
-    std::fs::File::create("input_decoded_base64.txt")
-        .unwrap()
-        .write_all(&bytes)
-        .unwrap();
+    base64::decode(&mut data).unwrap()
 }
 
 pub fn hex_str_to_bytes(data: &str) -> Vec<u8> {
