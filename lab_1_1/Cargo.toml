@@ -7,4 +7,5 @@ edition = "2018"
 
 [dependencies]
 base64 = "0.13.0"
-textplots = "0.8.0"
+rand = "0.8.4"
+lazy_static = "1.4.0"
