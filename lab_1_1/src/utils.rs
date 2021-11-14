@@ -53,6 +53,23 @@ pub fn hex_str_to_bytes(data: &str) -> Vec<u8> {
         .collect()
 }
 
+pub fn check_if_meaningful_text(data: Vec<u8>) -> Result<String, ()> {
+    let str = String::from_utf8(data).map_err(|_e| ())?;
+    if !str.contains(' ') {
+        return Err(());
+    }
+    if !str.contains('.') {
+        return Err(());
+    }
+    if !str.contains(" a ") {
+        return Err(());
+    }
+    if !str.contains("it") {
+        return Err(());
+    }
+    Ok(str)
+}
+
 #[cfg(test)]
 mod test {
     use crate::utils::{chars_to_byte, hex_str_to_bytes};
