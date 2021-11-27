@@ -1,6 +1,7 @@
 use crate::utils::check_if_meaningful_text;
 use std::collections::HashMap;
 
+pub mod frequency;
 pub mod substitution_genetic_algorithm;
 
 fn hack_ceaser(data: &[u8]) {
@@ -53,7 +54,7 @@ fn calculate_probabilities(data: &Vec<u8>) -> Vec<f32> {
     probabilities
 }
 
-pub fn decrypt_xor_vigenere_with_key(data: &[u8], key: &[u8]) -> Vec<u8> {
+pub fn decrypt_xor_vigenere(data: &[u8], key: &[u8]) -> Vec<u8> {
     let data_len = data.len();
     let mut decoded = vec![0; data_len];
 
@@ -71,7 +72,7 @@ pub fn decrypt_xor_vigenere_with_key(data: &[u8], key: &[u8]) -> Vec<u8> {
     decoded
 }
 
-pub fn decrypt_shift_vigenere_with_key(data: &[u8], key: &[u8]) -> Vec<u8> {
+pub fn decrypt_shift_vigenere(data: &[u8], key: &[u8]) -> Vec<u8> {
     let data_len = data.len();
     let mut decoded = vec![0; data_len];
 
@@ -90,12 +91,31 @@ pub fn decrypt_shift_vigenere_with_key(data: &[u8], key: &[u8]) -> Vec<u8> {
     decoded
 }
 
+pub fn encrypt_shift_vigenere(data: &[u8], key: &[u8]) -> Vec<u8> {
+    let data_len = data.len();
+    let mut encoded = vec![0; data_len];
+
+    let mut i = 0;
+    'main: loop {
+        for k_value in key {
+            if i >= data_len {
+                break 'main;
+            }
+            let mut new_c = data[i] + k_value;
+            encoded[i] = if new_c < 90 { new_c - 26 } else { new_c };
+            i += 1;
+        }
+    }
+
+    encoded
+}
+
 fn hack_vigenere(data: &[u8]) {
     for first in 1..255 {
         for second in 1..255 {
             for third in 1..255 {
                 let key = [first, second, third];
-                match check_if_meaningful_text(decrypt_xor_vigenere_with_key(data, &key)) {
+                match check_if_meaningful_text(decrypt_xor_vigenere(data, &key)) {
                     Ok(s) => println!("{:?} {}", key, s),
                     Err(_) => {}
                 }
@@ -106,8 +126,50 @@ fn hack_vigenere(data: &[u8]) {
 
 #[cfg(test)]
 mod tests {
-    use crate::algos::{calculate_probabilities, hack_ceaser, hack_vigenere};
+    use crate::algos::{
+        calculate_probabilities, decrypt_shift_vigenere, encrypt_shift_vigenere, hack_ceaser,
+        hack_vigenere,
+    };
     use crate::utils::{decode_base64, hex_str_to_bytes};
+
+    #[test]
+    fn test_simple_decrypt_shift_vigenere_with_key() {
+        println!("test simple");
+
+        let cipher = b"BBB";
+        let key = [1, 1, 1];
+
+        let decrypted = decrypt_shift_vigenere(cipher, &key);
+
+        assert_eq!(decrypted, vec![65, 65, 65]);
+
+        let cipher = b"BBB";
+        let key = [5, 5, 5];
+
+        let decrypted = decrypt_shift_vigenere(cipher, &key);
+
+        assert_eq!(decrypted, vec![87, 87, 87]);
+
+        let cipher = b"AAA";
+        let key = [1, 1, 1];
+
+        let decrypted = decrypt_shift_vigenere(cipher, &key);
+
+        assert_eq!(decrypted, vec![90, 90, 90]);
+    }
+
+    #[test]
+    fn test_decrypt_shift_vigenere_with_key() {
+        println!("test");
+
+        let original = b"QWERTYUIOPASDFGHJKLZXCVBNMINSIMPLERTERMSTHEFITNESSOFAPARTICULARINDIVIDUALISMERELYTHESUMOFALLTHELOGARITHMSBASE";
+        let key = b"QPOFIJMZFHICDJSK";
+
+        let cipher = encrypt_shift_vigenere(original, key);
+        let decrypted = decrypt_shift_vigenere(&cipher, key);
+
+        assert_eq!(original, decrypted.as_slice());
+    }
 
     #[test]
     fn test_hex_str_to_bytes() {
@@ -193,8 +255,8 @@ mod tests {
 
     #[test]
     fn test_find_key_len_for_task_1_3() {
-        let data = "EFFPQLEKVTVPCPYFLMVHQLUEWCNVWFYGHYTCETHQEKLPVMSAKSPVPAPVYWMVHQLUSPQLYWLASLFVWPQLMVHQLUPLRPSQLULQESPBLWPCSVRVWFLHLWFLWPUEWFYOTCMQYSLWOYWYETHQEKLPVMSAKSPVPAPVYWHEPPLUWSGYULEMQTLPPLUGUYOLWDTVSQETHQEKLPVPVSMTLEUPQEPCYAMEWWYTYWDLUULTCYWPQLSEOLSVOHTLUYAPVWLYGDALSSVWDPQLNLCKCLRQEASPVILSLEUMQBQVMQCYAHUYKEKTCASLFPYFLMVHQLUPQLHULIVYASHEUEDUEHQBVTTPQLVWFLRYGMYVWMVFLWMLSPVTTBYUNESESADDLSPVYWCYAMEWPUCPYFVIVFLPQLOLSSEDLVWHEUPSKCPQLWAOKLUYGMQEUEMPLUSVWENLCEWFEHHTCGULXALWMCEWETCSVSPYLEMQYGPQLOMEWCYAGVWFEBECPYASLQVDQLUYUFLUGULXALWMCSPEPVSPVMSBVPQPQVSPCHLYGMVHQLUPQLWLRPOEDVMETBYUFBVTTPENLPYPQLWLRPTEKLWZYCKVPTCSTESQPBYMEHVPETCMEHVPETZMEHVPETKTMEHVPETCMEHVPETT";
-        let probabilities = calculate_probabilities(&data.as_bytes().to_vec());
+        // let data = "EFFPQLEKVTVPCPYFLMVHQLUEWCNVWFYGHYTCETHQEKLPVMSAKSPVPAPVYWMVHQLUSPQLYWLASLFVWPQLMVHQLUPLRPSQLULQESPBLWPCSVRVWFLHLWFLWPUEWFYOTCMQYSLWOYWYETHQEKLPVMSAKSPVPAPVYWHEPPLUWSGYULEMQTLPPLUGUYOLWDTVSQETHQEKLPVPVSMTLEUPQEPCYAMEWWYTYWDLUULTCYWPQLSEOLSVOHTLUYAPVWLYGDALSSVWDPQLNLCKCLRQEASPVILSLEUMQBQVMQCYAHUYKEKTCASLFPYFLMVHQLUPQLHULIVYASHEUEDUEHQBVTTPQLVWFLRYGMYVWMVFLWMLSPVTTBYUNESESADDLSPVYWCYAMEWPUCPYFVIVFLPQLOLSSEDLVWHEUPSKCPQLWAOKLUYGMQEUEMPLUSVWENLCEWFEHHTCGULXALWMCEWETCSVSPYLEMQYGPQLOMEWCYAGVWFEBECPYASLQVDQLUYUFLUGULXALWMCSPEPVSPVMSBVPQPQVSPCHLYGMVHQLUPQLWLRPOEDVMETBYUFBVTTPENLPYPQLWLRPTEKLWZYCKVPTCSTESQPBYMEHVPETCMEHVPETZMEHVPETKTMEHVPETCMEHVPETT";
+        // let probabilities = calculate_probabilities(&data.as_bytes().to_vec());
         // println!("{:?}", probabilities);
         // key length == 7
     }
