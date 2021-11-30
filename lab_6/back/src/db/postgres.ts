@@ -59,9 +59,9 @@ export class Postgres implements IUserRepository {
     const client = await this.connectionPool.connect();
     await client.query('insert into users values ($1, $2, $3, $4, $5)', [
       user.id,
-      { value: user.username, isEncrypted: true } as QueryParamWithOption,
-      { value: user.email, isEncrypted: true } as QueryParamWithOption,
-      { value: user.fullName, isEncrypted: true } as QueryParamWithOption,
+      { value: user.username, isEncrypted: true },
+      { value: user.email, isEncrypted: true },
+      { value: user.fullName, isEncrypted: true },
       user.password as string,
     ]);
     client.release();

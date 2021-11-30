@@ -1,5 +1,5 @@
 import { Pool, PoolClient, PoolConfig } from 'pg';
-import {encryptParams} from "../crypto/utils";
+import { encryptParams } from '../crypto/utils';
 
 export type QueryParamValue = number | string;
 export type QueryParamWithOption = {

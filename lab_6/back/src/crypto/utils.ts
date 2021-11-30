@@ -1,8 +1,7 @@
 import { hash, verify, Options } from 'argon2';
 import { checkAndGetEnv } from '../utils/utils';
 import { randomBytes } from 'crypto';
-import {QueryParam} from "../db/pgWrapper";
-import {type} from "os";
+import { QueryParam } from '../db/pgWrapper';
 const xsalsa20 = require('xsalsa20');
 
 const argonOptions = {
