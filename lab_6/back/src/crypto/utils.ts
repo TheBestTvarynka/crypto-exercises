@@ -81,5 +81,5 @@ export const decryptQueryResult = (res: any): any => {
     }
     rows.push(newRow);
   }
-  return { ...res, rows: encryptedRows };
+  return { ...res, rows };
 };
