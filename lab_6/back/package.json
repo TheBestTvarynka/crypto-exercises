@@ -11,10 +11,9 @@
     "unit-tests": "echo \"will be soon...\"",
     "integration-tests": "echo \"will be soon...\""
   },
-  "repository": "git@gitlab.com:MicroEshka/auth.git",
+  "repository": "git@github.com:TheBestTvarynka/crypto-exercises.git",
   "author": "Pavlo Myroniuk <pspos.developqkation@gmail.com>",
   "contributors": [
-    "Volodya Orlov <volodka.orlov@gmail.com>",
     "Pavlo Myroniuk <pspos.developqkation@gmail.com>"
   ],
   "license": "MIT",

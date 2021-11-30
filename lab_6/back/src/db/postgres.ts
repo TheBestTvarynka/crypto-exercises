@@ -1,13 +1,14 @@
-import { Pool, PoolConfig } from 'pg';
+import { PoolConfig } from 'pg';
 import { User } from '../types/user';
 import { IUserRepository } from './types';
+import { PgConnectionWrapper } from "./pgWrapper";
 
 export class Postgres implements IUserRepository {
-  private connectionPool: Pool;
+  private connectionPool: PgConnectionWrapper;
 
   constructor(opts: PoolConfig) {
     try {
-      this.connectionPool = new Pool(opts);
+      this.connectionPool = new PgConnectionWrapper(opts);
     } catch (e) {
       console.error('Failed to connect to Postgres: ', e);
       throw e;
@@ -29,7 +30,7 @@ export class Postgres implements IUserRepository {
     const rows = (await client.query(
         'select * from users where username = $1',
         [username],
-    )).rows.map((user) => ({ ...user, fullName: user['full_name'], full_name: undefined }));
+    )).rows.map((user: any) => ({ ...user, fullName: user['full_name'], full_name: undefined }));
     client.release();
     return rows[0];
   }
@@ -57,7 +58,7 @@ export class Postgres implements IUserRepository {
       user.username,
       user.email,
       user.fullName,
-      user.password,
+      user.password as string,
     ]);
     client.release();
   }
@@ -67,7 +68,7 @@ export class Postgres implements IUserRepository {
     const ids = (await client.query(
         'select user_id from groups2users where group_id=$1',
         [groupId]
-    )).rows.map(row => row['user_id']);
+    )).rows.map((row: any) => row['user_id']);
     client.release();
     return ids;
   }
