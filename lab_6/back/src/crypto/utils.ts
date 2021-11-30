@@ -2,6 +2,7 @@ import { hash, verify, Options } from 'argon2';
 import { checkAndGetEnv } from '../utils/utils';
 import { randomBytes } from 'crypto';
 import {QueryParam} from "../db/pgWrapper";
+import {type} from "os";
 const xsalsa20 = require('xsalsa20');
 
 const argonOptions = {
@@ -38,12 +39,15 @@ export const comparePasswords = async (password: string, hash: string): Promise<
 };
 
 const encryptElem = (elem: QueryParam): QueryParam => {
-  let data: string;
-  if (typeof elem === 'string') {
-    data = elem;
+  let data: string = '';
+  if (typeof elem === 'string' || typeof elem === 'number') {
+    return elem;
+  } else if (elem.isEncrypted) {
+    data = elem.value + '';
   } else {
-    data = elem + '';
+    return elem.value;
   }
+
   const cipherKey = checkAndGetEnv('CIPHER_KEY');
 
   const bufferNonce = randomBytes(32);
@@ -68,18 +72,23 @@ const decrypt = (data: string, key: string): string => {
   return Buffer.from(xor.update(cipherBuffer)).toString('utf-8');
 };
 
-export const decryptQueryResult = (res: any): any => {
-  const encryptedRows: any[] = res.rows;
-  const rows: any[] = [];
+export function decryptRow<T>(row: T, schema: any): T {
   const cipherKey = checkAndGetEnv('CIPHER_KEY');
-  for (const row of encryptedRows) {
-    const newRow: any = {};
-    for (const field in row) {
-      if (row.hasOwnProperty(field)) {
-        newRow[field] = decrypt(row[field], cipherKey);
-      }
+  const newRow: any = {};
+  for (const field in row) {
+    if (schema[field] === true) {
+      newRow[field] = decrypt(row[field] + '', cipherKey);
+    } else {
+      newRow[field] = row[field];
     }
-    rows.push(newRow);
   }
-  return { ...res, rows };
-};
+  return newRow;
+}
+
+export function decryptRows<T>(rows: T[], schema: any): T[] {
+  const decryptedRows: T[] = [];
+  for (const row of rows) {
+    rows.push(decryptRow(row, schema));
+  }
+  return decryptedRows;
+}

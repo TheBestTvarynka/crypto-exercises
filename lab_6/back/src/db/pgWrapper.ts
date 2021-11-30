@@ -1,7 +1,12 @@
 import { Pool, PoolClient, PoolConfig } from 'pg';
 import {encryptParams} from "../crypto/utils";
 
-export type QueryParam = number | string;
+export type QueryParamValue = number | string;
+export type QueryParamWithOption = {
+  isEncrypted: boolean,
+  value: QueryParamValue
+};
+export type QueryParam = QueryParamValue | QueryParamWithOption;
 
 export class PgClientWrapper {
   private client: PoolClient;
@@ -15,8 +20,7 @@ export class PgClientWrapper {
   }
 
   public async query(sqlQuery: string, params: QueryParam[]): Promise<any> {
-    const res = await this.client.query(sqlQuery, encryptParams(params));
-    return res;
+    return this.client.query(sqlQuery, encryptParams(params));
   }
 }
 

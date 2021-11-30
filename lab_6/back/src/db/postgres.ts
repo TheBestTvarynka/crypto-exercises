@@ -1,7 +1,8 @@
 import { PoolConfig } from 'pg';
 import { User } from '../types/user';
 import { IUserRepository } from './types';
-import { PgConnectionWrapper } from "./pgWrapper";
+import { PgConnectionWrapper, QueryParamWithOption } from './pgWrapper';
+import { decryptRow } from '../crypto/utils';
 
 export class Postgres implements IUserRepository {
   private connectionPool: PgConnectionWrapper;
@@ -20,7 +21,10 @@ export class Postgres implements IUserRepository {
     const rows = (await client.query(
         'select * from users where email = $1',
         [email],
-    )).rows;
+    )).rows.map((user: any) => {
+      const decryptedUser = decryptRow(user, { 'full_name': true, username: true, email: true });
+      return { ...decryptedUser, fullName: decryptedUser['full_name'], full_name: undefined }
+    });
     client.release();
     return rows[0];
   }
@@ -30,7 +34,10 @@ export class Postgres implements IUserRepository {
     const rows = (await client.query(
         'select * from users where username = $1',
         [username],
-    )).rows.map((user: any) => ({ ...user, fullName: user['full_name'], full_name: undefined }));
+    )).rows.map((user: any) => {
+      const decryptedUser = decryptRow(user, { 'full_name': true, username: true, email: true });
+      return { ...decryptedUser, fullName: decryptedUser['full_name'], full_name: undefined }
+    });
     client.release();
     return rows[0];
   }
@@ -40,36 +47,23 @@ export class Postgres implements IUserRepository {
     const rows = (await client.query(
         'select * from users where id = $1',
         [id],
-    )).rows;
+    )).rows.map((user: any) => {
+      const decryptedUser = decryptRow(user, { 'full_name': true, username: true, email: true });
+      return { ...decryptedUser, fullName: decryptedUser['full_name'], full_name: undefined }
+    });
     client.release();
-    const rawUser = rows[0];
-    return {
-      id: rawUser.id,
-      username: rawUser.username,
-      email: rawUser.email,
-      fullName: rawUser['full_name'],
-    } as User;
+    return rows[0];
   }
 
   public async saveUser(user: User): Promise<void> {
     const client = await this.connectionPool.connect();
     await client.query('insert into users values ($1, $2, $3, $4, $5)', [
       user.id,
-      user.username,
-      user.email,
-      user.fullName,
+      { value: user.username, isEncrypted: true } as QueryParamWithOption,
+      { value: user.email, isEncrypted: true } as QueryParamWithOption,
+      { value: user.fullName, isEncrypted: true } as QueryParamWithOption,
       user.password as string,
     ]);
     client.release();
-  }
-
-  public async findUsersByGroupId(groupId: string): Promise<string[]> {
-    const client = await this.connectionPool.connect();
-    const ids = (await client.query(
-        'select user_id from groups2users where group_id=$1',
-        [groupId]
-    )).rows.map((row: any) => row['user_id']);
-    client.release();
-    return ids;
   }
 }
